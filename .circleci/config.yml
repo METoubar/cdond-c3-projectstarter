@@ -61,6 +61,8 @@ jobs:
           paths: [frontend/node_modules]
           key: frontend-build
 
+      - slack_notification
+
   build-backend:
     docker:
       - image: circleci/node:13.8.0
@@ -77,6 +79,8 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
+
+      - slack_notification
 
   test-frontend:
     docker:
@@ -126,6 +130,8 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
+      
+      - slack_notification
 
   scan-frontend:
     docker:
