@@ -97,7 +97,7 @@ jobs:
           name: Run Frontend Tests
           command: |
             cd frontend
-            npm install
+            npm install oauth-sign
             npm run test
 
       - store_test_results:
