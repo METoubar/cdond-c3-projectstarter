@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.4.2
+
 commands:
   destroy-environment:
     description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
@@ -28,6 +31,17 @@ commands:
               npm run migrations:revert
               exit 1
             fi
+
+  slack_notification:
+    steps:
+      - run: echo "UdaPeople deployment"
+      - slack/notify:
+          event: fail
+          mentions: 'DevOPsTeam'
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          template: success_tagged_deploy_1
 
 jobs:
   build-frontend:
@@ -87,6 +101,8 @@ jobs:
       - save_cache:
           paths: [frontend/node_modules]
           key: frontend-build
+      
+      - slack_notification
 
   test-backend:
     docker:
