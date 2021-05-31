@@ -79,7 +79,7 @@ jobs:
           name: Run Frontend Tests
           command: |
             cd frontend
-            npm run test
+            npm run test:cov
 
       - store_test_results:
           path: frontend/outputs
