@@ -97,6 +97,7 @@ jobs:
           name: Run Frontend Tests
           command: |
             cd frontend
+            npm install
             npm run test
 
       - store_test_results:
