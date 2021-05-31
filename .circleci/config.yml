@@ -76,7 +76,7 @@ jobs:
             - frontend-build
       # Your job code here
       - run:
-          name: Test frontend
+          name: Run Frontend Tests
           command: |
             cd frontend
             npm run test
@@ -99,7 +99,7 @@ jobs:
           keys: [backend-build]
       # Your job code here
       - run:
-          name: Run tests with JUnit as reporter
+          name: Run Backend Tests
           command: |
             cd backend
             npm run test
