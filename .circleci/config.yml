@@ -79,13 +79,10 @@ jobs:
           name: Test frontend
           command: |
             cd frontend
-            npm add --dev jest-junit
-            npm run test --reporters=jest-junit
+            npm run test
 
       - store_test_results:
-          path: frontend/test-results
-      - store_artifacts:
-          path: frontend/test-results/junit/junit.xml
+          path: frontend/outputs
 
       - save_cache:
           paths: [frontend/node_modules]
@@ -105,13 +102,10 @@ jobs:
           name: Run tests with JUnit as reporter
           command: |
             cd backend
-            npm add --dev jest-junit
-            npm run test --reporters=jest-junit
+            npm run test
 
       - store_test_results:
-          path: backend/test-results
-      - store_artifacts:
-          path: backend/test-results/junit/junit.xml
+          path: backend/outputs
 
       - save_cache:
           paths: [backend/node_modules]
