@@ -11,8 +11,8 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
-            # Your code here
-            exit 1
+            aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
+            aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
 
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
@@ -175,10 +175,6 @@ jobs:
       - image: amazon/aws-cli
     # Docker image here that supports AWS CLI
     steps:
-      # Checkout code from git
-      # - add_ssh_keys:
-      #     fingerprints:
-      #       - "38:b0:4d:54:be:1e:bb:c0:2d:d1:d1:64:07:a6:94:08"
       - checkout
       - run:
           name: Dpependencies Installation
@@ -193,6 +189,16 @@ jobs:
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" \
               --region us-east-1
             # exit 1
+      - run:
+          name: Save backend URL in memstash
+          command: |
+            BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            curl -H "Content-Type: text/plain" \
+              -H "token: 3b098c25-d136-4b6d-ad0d-829341f39638" \
+              --request PUT --data "http://$BACKEND_IP:3030" https://api.memstash.io/values/BACKEND_URL
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -214,6 +220,40 @@ jobs:
           root: ~/
           paths:
             - project/.circleci/ansible/inventory.txt
+      - destroy_environment:
+          id: ${CIRCLE_WORKFLOW_ID}
+          when: on_fail
+      # Here's where you will add some code to rollback on failure
+
+  configure-infrastructure:
+    docker:
+      # Docker image here that supports Ansible
+      - image: python
+    steps:
+      # Checkout code from git
+      - checkout
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints:
+            - "38:b0:4d:54:be:1e:bb:c0:2d:d1:d1:64:07:a6:94:08"
+      # attach workspace
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          command: |
+            pip install --user ansible
+            ansible --version
+            # exit 1
+      - run:
+          name: Configure server
+          command: |
+            cd .circleci/ansible/
+            ansible-playbook configure-server.yaml -i inventory.txt
+            exit 1
+      - destroy_environment:
+          id: ${CIRCLE_WORKFLOW_ID}
+          when: on_fail
       # Here's where you will add some code to rollback on failure
 
 workflows:
