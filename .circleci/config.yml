@@ -176,9 +176,9 @@ jobs:
     # Docker image here that supports AWS CLI
     steps:
       # Checkout code from git
-      - add_ssh_keys:
-          fingerprints:
-            - "38:b0:4d:54:be:1e:bb:c0:2d:d1:d1:64:07:a6:94:08"
+      # - add_ssh_keys:
+      #     fingerprints:
+      #       - "38:b0:4d:54:be:1e:bb:c0:2d:d1:d1:64:07:a6:94:08"
       - checkout
       - run:
           name: Ensure back-end infrastructure exists
@@ -187,7 +187,8 @@ jobs:
               --template-file .circleci/files/backend.yml \
               --tags project=project4 \
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" \
+              --region us-east-1
               exit 1
       - run:
           name: Ensure front-end infrastructure exist
@@ -196,7 +197,8 @@ jobs:
               --template-file .circleci/files/frontend.yml \
               --tags project=project4 \
               --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" \
+              --region us-east-1
               exit 1
       - run:
           name: Add back-end ip to ansible inventory
