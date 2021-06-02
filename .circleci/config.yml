@@ -181,6 +181,9 @@ jobs:
       #       - "38:b0:4d:54:be:1e:bb:c0:2d:d1:d1:64:07:a6:94:08"
       - checkout
       - run:
+          name: Dpependencies Installation
+          command: yum install -y tar gzip
+      - run:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
