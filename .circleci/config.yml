@@ -249,7 +249,7 @@ jobs:
           name: Configure server
           command: |
             cd .circleci/ansible/
-            ansible-playbook configure-server.yml -i inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
             exit 1
       - when:
           condition: on_fail
@@ -316,6 +316,22 @@ jobs:
             aws s3 cp ./frontend/dist "s3://udapeople-${CIRCLE_WORKFLOW_ID}" --recursive
       # Here's where you will add some code to rollback on failure
 
+  deploy-backend:
+    docker:
+      # Docker image here that supports Ansible
+    steps:
+      # Checkout code from git
+      # Add ssh keys with fingerprint
+      # attach workspace
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+      - run:
+          name: Deploy backend
+          command: |
+            # your code here
+      # Here's where you will add some code to rollback on failure
 
 workflows:
   default:
