@@ -30,4 +30,4 @@
 
   roles:
     # Your code here
-    - configure-server.yaml
+    - configure-server
