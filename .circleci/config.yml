@@ -228,7 +228,7 @@ jobs:
   configure-infrastructure:
     docker:
       # Docker image here that supports Ansible
-      - image: python:3.9.0-alpine
+      - image: python:3.10.0b1-alpine3.13
     steps:
       # Checkout code from git
       - checkout
@@ -249,7 +249,7 @@ jobs:
           name: Configure server
           command: |
             cd .circleci/ansible/
-            ansible-playbook configure-server.yaml -i inventory.txt
+            ansible-playbook configure-server.yml -i inventory.txt
             exit 1
       - when:
           condition: on_fail
