@@ -228,7 +228,7 @@ jobs:
   configure-infrastructure:
     docker:
       # Docker image here that supports Ansible
-      - image: python
+      - image: ansible/ansible
     steps:
       # Checkout code from git
       - checkout
@@ -241,10 +241,12 @@ jobs:
           at: .
       - run:
           name: Install dependencies
+          working_directory: /tmp
           command: |
-            pip3 install --user ansible
-            # ansible --version
-            # exit 1
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Configure server
           command: |
