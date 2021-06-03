@@ -13,7 +13,7 @@ commands:
             aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
             aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
 
-  revert-migrations:
+  revert_migrations:
     description: Revert the last migration if successfully run in the current workflow.
     steps:
       - run:
@@ -21,14 +21,13 @@ commands:
           # Add when this will run
           command: |
             # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
-            if(( $SUCCESS==1 )); 
+            SUCCESS=$(curl -H "token: 3b098c25-d136-4b6d-ad0d-829341f39638" --request GET https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID})
+            if [[ $SUCCESS==1 ]] 
             then
               cd backend
               npm i
               npm run build
               npm run migrations:revert
-              exit 1
             fi
 
   slack_notification:
@@ -292,14 +291,18 @@ jobs:
 
   deploy-frontend:
     docker:
-      - image: amazon/aws-cli
+      - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
       - checkout
       - run:
           name: Install dependencies
+          working_directory: /tmp
           command: |
-            # your code here
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Get backend url
           command: |
@@ -314,24 +317,55 @@ jobs:
           name: Deploy frontend objects
           command: |
             aws s3 cp ./frontend/dist "s3://udapeople-${CIRCLE_WORKFLOW_ID}" --recursive
+      - persist_to_workspace:
+          root: .
+          paths:
+            - frontend/dist
+      - when:
+          condition: on_fail
+          steps:
+            - destroy_environments
+      - when:
+          condition: on_fail
+          steps:
+            - revert_migrations
       # Here's where you will add some code to rollback on failure
 
-  # deploy-backend:
-  #   docker:
-  #     # Docker image here that supports Ansible
-  #   steps:
-  #     # Checkout code from git
-  #     # Add ssh keys with fingerprint
-  #     # attach workspace
-  #     - run:
-  #         name: Install dependencies
-  #         command: |
-  #           # your code here
-  #     - run:
-  #         name: Deploy backend
-  #         command: |
-  #           # your code here
-  #     # Here's where you will add some code to rollback on failure
+  deploy-backend:
+    docker:
+      - image: python:3.10.0b1-alpine3.13
+    steps:
+      # Checkout code from git
+      - checkout
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          fingerprints:
+            - "38:b0:4d:54:be:1e:bb:c0:2d:d1:d1:64:07:a6:94:08"
+      # attach workspace
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update ansible
+            ansible --version
+            pip install awscli
+            aws --version
+            # exit 1
+      - run:
+          name: Deploy backend
+          command: |
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      - when:
+          condition: on_fail
+          steps:
+            - destroy_environments
+      - when:
+          condition: on_fail
+          steps:
+            - revert_migrations
+      # Here's where you will add some code to rollback on failure
 
 workflows:
   default:
