@@ -242,7 +242,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            pip install --user ansible
+            pip3 install --user ansible
             ansible --version
             # exit 1
       - run:
@@ -256,6 +256,66 @@ jobs:
           steps:
             - destroy_environments
       # Here's where you will add some code to rollback on failure
+
+  run-migrations:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      # Checkout code from git
+      - checkout
+      - run:
+          name: Run migrations
+          command: |
+            npm run migrations
+            # exit 1
+      - run:
+          name: Send migration results to memstash
+          command: |
+            if grep -q "has been executed successfully" migration_status
+            then
+              echo "Successful Migration, will update memstash..."
+              curl -H "Content-Type: text/plain" \
+                -H "token: 3b098c25-d136-4b6d-ad0d-829341f39638" \
+                --request PUT --data "success" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+            else
+              echo "Migration Failed"
+              curl -H "Content-Type: text/plain" \
+                -H "token: 3b098c25-d136-4b6d-ad0d-829341f39638" \
+                --request PUT --data "failure" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+            fi
+            # exit 1
+      - when:
+          condition: on_fail
+          steps:
+            - destroy_environments
+      # Here's where you will add some code to rollback on failure
+
+  deploy-frontend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+      - run:
+          name: Get backend url
+          command: |
+            BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text)
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            npm run build
+      - run:
+          name: Deploy frontend objects
+          command: |
+            aws s3 cp ./frontend/dist "s3://udapeople-${CIRCLE_WORKFLOW_ID}" --recursive
+      # Here's where you will add some code to rollback on failure
+
 
 workflows:
   default:
